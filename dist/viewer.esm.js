@@ -1,11 +1,11 @@
 /*!
- * Viewer.js v1.3.0
+ * Viewer.js v1.3.1
  * https://fengyuanchen.github.io/viewerjs
  *
  * Copyright 2015-present Chen Fengyuan
  * Released under the MIT license
  *
- * Date: 2018-10-25T12:41:54.899Z
+ * Date: 2018-12-07T09:51:38.806Z
  */
 
 function _typeof(obj) {
@@ -155,6 +155,12 @@ var DEFAULTS = {
   movable: true,
 
   /**
+   * Enable to limit move the image.
+   * @type {boolean}
+   */
+  limitMovement: false,
+
+  /**
    * Enable to zoom the image.
    * @type {boolean}
    */
@@ -171,6 +177,12 @@ var DEFAULTS = {
    * @type {boolean}
    */
   scalable: true,
+
+  /**
+   * Enable to swipe the image.
+   * @type {boolean}
+   */
+  swipeable: true,
 
   /**
    * Indicate if toggle the image size between its natural size
@@ -1389,6 +1401,7 @@ var handlers = {
   },
   dragstart: function dragstart(e) {
     if (e.target.tagName.toLowerCase() === 'img') {
+      e.stopPropagation();
       e.preventDefault();
     }
   },
@@ -1398,9 +1411,9 @@ var handlers = {
 
     if (!this.viewed || this.showing || this.viewing || this.hiding) {
       return;
-    } // This line is required for preventing page zooming in iOS browsers
+    }
 
-
+    e.stopPropagation();
     e.preventDefault();
 
     if (e.changedTouches) {
@@ -1433,11 +1446,11 @@ var handlers = {
       return;
     }
 
+    e.stopPropagation();
     e.preventDefault();
 
     if (e.changedTouches) {
       forEach(e.changedTouches, function (touch) {
-        // // The first parameter should not be undefined in some browsers
         assign(pointers[touch.identifier] || {}, getPointer(touch, true));
       });
     } else {
@@ -1462,10 +1475,21 @@ var handlers = {
       return;
     }
 
+    e.stopPropagation();
     e.preventDefault();
 
     if (this.options.transition && (action === ACTION_MOVE || action === ACTION_ZOOM)) {
       addClass(this.image, CLASS_TRANSITION);
+    }
+
+    if (this.options.limitMovement && action === ACTION_MOVE) {
+      this.checkMoveReset();
+    }
+
+    var isiDevice = /ipad|iphone|ipod/i.test(navigator.userAgent.toLowerCase());
+
+    if (isiDevice && (action === ACTION_SWITCH || action === ACTION_MOVE)) {
+      this.click(e);
     }
 
     this.action = false;
@@ -1846,32 +1870,118 @@ var methods = {
 
   /**
    * Move the image to an absolute point.
-   * @param {number} x - The x-axis coordinate.
-   * @param {number} [y=x] - The y-axis coordinate.
+   * @param {number} newOffsetX - The x-axis coordinate.
+   * @param {number} [newOffsetY=newOffsetX] - The y-axis coordinate.
    * @returns {Viewer} this
    */
-  moveTo: function moveTo(x) {
-    var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : x;
-    var imageData = this.imageData;
-    x = Number(x);
-    y = Number(y);
+  moveTo: function moveTo(newOffsetX) {
+    var newOffsetY = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : newOffsetX;
+    var imageData = this.imageData,
+        containerData = this.containerData;
+    newOffsetX = Number(newOffsetX);
+    newOffsetY = Number(newOffsetY);
 
     if (this.viewed && !this.played && this.options.movable) {
       var changed = false;
+      var canvasWidth = containerData.width;
+      var canvasHeight = containerData.height;
+      var currentWidth = imageData.width;
+      var currentHeight = imageData.height;
 
-      if (isNumber(x)) {
-        imageData.left = x;
-        changed = true;
-      }
+      if (this.options.limitMovement && (currentWidth > canvasWidth || currentHeight > canvasHeight)) {
+        var currentOffsetX = imageData.left;
+        var currentOffsetY = imageData.top;
 
-      if (isNumber(y)) {
-        imageData.top = y;
-        changed = true;
+        if (isNumber(newOffsetX)) {
+          var distanceX = newOffsetX - currentOffsetX;
+
+          if (currentWidth <= canvasWidth) {
+            newOffsetX = currentOffsetX;
+          } // Slow down proportionally to traveled distance
+
+
+          var minTranslateX = Math.max(0, canvasWidth * 0.5 - currentWidth * 0.5);
+          var maxTranslateX = Math.min(canvasWidth - currentWidth, canvasWidth * 0.5 - currentWidth * 0.5);
+
+          if (distanceX > 0 && newOffsetX > minTranslateX) {
+            newOffsetX = currentOffsetX + distanceX * 0.2;
+          }
+
+          if (distanceX < 0 && newOffsetX < maxTranslateX) {
+            newOffsetX = currentOffsetX + distanceX * 0.2;
+          }
+
+          imageData.left = newOffsetX;
+          changed = true;
+        }
+
+        if (isNumber(newOffsetY)) {
+          var distanceY = newOffsetY - currentOffsetY; // Slow down proportionally to traveled distance
+
+          var minTranslateY = Math.max(0, canvasHeight * 0.5 - currentHeight * 0.5);
+          var maxTranslateY = Math.min(canvasHeight - currentHeight, canvasHeight * 0.5 - currentHeight * 0.5);
+
+          if (distanceY > 0 && newOffsetY > minTranslateY) {
+            newOffsetY = currentOffsetY + distanceY * 0.2;
+          }
+
+          if (distanceY < 0 && newOffsetY < maxTranslateY) {
+            newOffsetY = currentOffsetY + distanceY * 0.2;
+          }
+
+          imageData.top = newOffsetY;
+          changed = true;
+        }
+      } else {
+        if (isNumber(newOffsetX)) {
+          imageData.left = newOffsetX;
+          changed = true;
+        }
+
+        if (isNumber(newOffsetY)) {
+          imageData.top = newOffsetY;
+          changed = true;
+        }
       }
 
       if (changed) {
         this.renderImage();
       }
+    }
+
+    return this;
+  },
+
+  /**
+   * Check when end of move to return limit position.
+   * @returns {Viewer} this
+   */
+  checkMoveReset: function checkMoveReset() {
+    var imageData = this.imageData,
+        containerData = this.containerData;
+    var changed = false;
+    var canvasWidth = containerData.width;
+    var canvasHeight = containerData.height;
+    var currentOffsetX = imageData.left;
+    var currentOffsetY = imageData.top;
+    var currentWidth = imageData.width;
+    var currentHeight = imageData.height; // Slow down proportionally to traveled distance
+
+    var minTranslateX = Math.max(0, canvasWidth * 0.5 - currentWidth * 0.5);
+    var maxTranslateX = Math.min(canvasWidth - currentWidth, canvasWidth * 0.5 - currentWidth * 0.5);
+    var minTranslateY = Math.max(0, canvasHeight * 0.5 - currentHeight * 0.5);
+    var maxTranslateY = Math.min(canvasHeight - currentHeight, canvasHeight * 0.5 - currentHeight * 0.5);
+
+    if (currentOffsetX > minTranslateX || currentOffsetX < maxTranslateX || currentOffsetY > minTranslateY || currentOffsetY < maxTranslateY) {
+      changed = true;
+      if (currentOffsetX > minTranslateX) imageData.left = minTranslateX;
+      if (currentOffsetX < maxTranslateX) imageData.left = maxTranslateX;
+      if (currentOffsetY > minTranslateY) imageData.top = minTranslateY;
+      if (currentOffsetY < maxTranslateY) imageData.top = maxTranslateY;
+    }
+
+    if (changed) {
+      this.renderImage();
     }
 
     return this;
@@ -2577,17 +2687,19 @@ var others = {
 
       case ACTION_SWITCH:
         {
-          this.action = 'switched';
-          var absoluteOffsetX = Math.abs(offsetX);
+          if (options.swipeable) {
+            this.action = 'switched';
+            var absoluteOffsetX = Math.abs(offsetX);
 
-          if (absoluteOffsetX > 1 && absoluteOffsetX > Math.abs(offsetY)) {
-            // Empty `pointers` as `touchend` event will not be fired after swiped in iOS browsers.
-            this.pointers = {};
+            if (absoluteOffsetX > 1 && absoluteOffsetX > Math.abs(offsetY)) {
+              // Empty `pointers` as `touchend` event will not be fired after swiped in iOS browsers.
+              this.pointers = {};
 
-            if (offsetX > 1) {
-              this.prev(options.loop);
-            } else if (offsetX < -1) {
-              this.next(options.loop);
+              if (offsetX > 1) {
+                this.prev(options.loop);
+              } else if (offsetX < -1) {
+                this.next(options.loop);
+              }
             }
           }
 
@@ -2678,11 +2790,6 @@ function () {
           images.push(image);
         }
       });
-
-      if (!images.length) {
-        return;
-      }
-
       this.isImg = isImg;
       this.length = images.length;
       this.images = images;

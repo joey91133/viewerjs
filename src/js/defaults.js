@@ -109,6 +109,12 @@ export default {
   movable: true,
 
   /**
+   * Enable to limit move the image.
+   * @type {boolean}
+   */
+  limitMovement: false,
+
+  /**
    * Enable to zoom the image.
    * @type {boolean}
    */
@@ -125,6 +131,12 @@ export default {
    * @type {boolean}
    */
   scalable: true,
+
+  /**
+   * Enable to swipe the image.
+   * @type {boolean}
+   */
+  swipeable: true,
 
   /**
    * Indicate if toggle the image size between its natural size

@@ -276,6 +276,7 @@ export default {
 
   dragstart(e) {
     if (e.target.tagName.toLowerCase() === 'img') {
+      e.stopPropagation();
       e.preventDefault();
     }
   },
@@ -287,7 +288,7 @@ export default {
       return;
     }
 
-    // This line is required for preventing page zooming in iOS browsers
+    e.stopPropagation();
     e.preventDefault();
 
     if (e.changedTouches) {
@@ -323,6 +324,7 @@ export default {
       return;
     }
 
+    e.stopPropagation();
     e.preventDefault();
 
     if (e.changedTouches) {
@@ -351,10 +353,21 @@ export default {
       return;
     }
 
+    e.stopPropagation();
     e.preventDefault();
 
     if (this.options.transition && (action === ACTION_MOVE || action === ACTION_ZOOM)) {
       addClass(this.image, CLASS_TRANSITION);
+    }
+
+    if (this.options.limitMovement && action === ACTION_MOVE) {
+      this.checkMoveReset();
+    }
+
+    const isiDevice = /ipad|iphone|ipod/i.test(navigator.userAgent.toLowerCase());
+
+    if (isiDevice && (action === ACTION_SWITCH || action === ACTION_MOVE)) {
+      this.click(e);
     }
 
     this.action = false;

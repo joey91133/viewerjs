@@ -134,18 +134,20 @@ export default {
         break;
 
       case ACTION_SWITCH: {
-        this.action = 'switched';
+        if (options.swipeable) {
+          this.action = 'switched';
 
-        const absoluteOffsetX = Math.abs(offsetX);
+          const absoluteOffsetX = Math.abs(offsetX);
 
-        if (absoluteOffsetX > 1 && absoluteOffsetX > Math.abs(offsetY)) {
-          // Empty `pointers` as `touchend` event will not be fired after swiped in iOS browsers.
-          this.pointers = {};
+          if (absoluteOffsetX > 1 && absoluteOffsetX > Math.abs(offsetY)) {
+            // Empty `pointers` as `touchend` event will not be fired after swiped in iOS browsers.
+            this.pointers = {};
 
-          if (offsetX > 1) {
-            this.prev(options.loop);
-          } else if (offsetX < -1) {
-            this.next(options.loop);
+            if (offsetX > 1) {
+              this.prev(options.loop);
+            } else if (offsetX < -1) {
+              this.next(options.loop);
+            }
           }
         }
 

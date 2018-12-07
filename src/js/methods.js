@@ -45,7 +45,10 @@ export default {
    * @returns {Viewer} this
    */
   show(immediate = false) {
-    const { element, options } = this;
+    const {
+      element,
+      options,
+    } = this;
 
     if (options.inline || this.showing || this.isShown || this.showing) {
       return this;
@@ -78,7 +81,9 @@ export default {
     this.showing = true;
     this.open();
 
-    const { viewer } = this;
+    const {
+      viewer,
+    } = this;
 
     removeClass(viewer, CLASS_HIDE);
 
@@ -115,7 +120,10 @@ export default {
    * @returns {Viewer} this
    */
   hide(immediate = false) {
-    const { element, options } = this;
+    const {
+      element,
+      options,
+    } = this;
 
     if (options.inline || this.hiding || !(this.isShown || this.showing)) {
       return this;
@@ -143,7 +151,9 @@ export default {
       this.viewing.abort();
     }
 
-    const { viewer } = this;
+    const {
+      viewer,
+    } = this;
 
     if (options.transition && !immediate) {
       const hidden = this.hidden.bind(this);
@@ -254,7 +264,9 @@ export default {
 
     // Generate title after viewed
     const onViewed = () => {
-      const { imageData } = this;
+      const {
+        imageData,
+      } = this;
       const render = Array.isArray(options.title) ? options.title[1] : options.title;
 
       title.innerHTML = isFunction(render)
@@ -350,7 +362,9 @@ export default {
    * @returns {Viewer} this
    */
   move(offsetX, offsetY) {
-    const { imageData } = this;
+    const {
+      imageData,
+    } = this;
 
     this.moveTo(
       isUndefined(offsetX) ? offsetX : imageData.left + Number(offsetX),
@@ -362,32 +376,148 @@ export default {
 
   /**
    * Move the image to an absolute point.
-   * @param {number} x - The x-axis coordinate.
-   * @param {number} [y=x] - The y-axis coordinate.
+   * @param {number} newOffsetX - The x-axis coordinate.
+   * @param {number} [newOffsetY=newOffsetX] - The y-axis coordinate.
    * @returns {Viewer} this
    */
-  moveTo(x, y = x) {
-    const { imageData } = this;
+  moveTo(newOffsetX, newOffsetY = newOffsetX) {
+    const {
+      imageData,
+      containerData,
+    } = this;
 
-    x = Number(x);
-    y = Number(y);
+    newOffsetX = Number(newOffsetX);
+    newOffsetY = Number(newOffsetY);
 
     if (this.viewed && !this.played && this.options.movable) {
       let changed = false;
 
-      if (isNumber(x)) {
-        imageData.left = x;
-        changed = true;
-      }
+      const canvasWidth = containerData.width;
+      const canvasHeight = containerData.height;
 
-      if (isNumber(y)) {
-        imageData.top = y;
-        changed = true;
+      const currentWidth = imageData.width;
+      const currentHeight = imageData.height;
+
+      if (
+        this.options.limitMovement
+        && (currentWidth > canvasWidth || currentHeight > canvasHeight)
+      ) {
+        const currentOffsetX = imageData.left;
+        const currentOffsetY = imageData.top;
+
+        if (isNumber(newOffsetX)) {
+          const distanceX = newOffsetX - currentOffsetX;
+          if (currentWidth <= canvasWidth) {
+            newOffsetX = currentOffsetX;
+          }
+
+          // Slow down proportionally to traveled distance
+          const minTranslateX = Math.max(0, canvasWidth * 0.5 - currentWidth * 0.5);
+          const maxTranslateX = Math.min(
+            canvasWidth - currentWidth,
+            canvasWidth * 0.5 - currentWidth * 0.5,
+          );
+
+          if (distanceX > 0 && newOffsetX > minTranslateX) {
+            newOffsetX = currentOffsetX + distanceX * 0.2;
+          }
+
+          if (distanceX < 0 && newOffsetX < maxTranslateX) {
+            newOffsetX = currentOffsetX + distanceX * 0.2;
+          }
+
+          imageData.left = newOffsetX;
+          changed = true;
+        }
+
+        if (isNumber(newOffsetY)) {
+          const distanceY = newOffsetY - currentOffsetY;
+
+          // Slow down proportionally to traveled distance
+          const minTranslateY = Math.max(0, canvasHeight * 0.5 - currentHeight * 0.5);
+          const maxTranslateY = Math.min(
+            canvasHeight - currentHeight,
+            canvasHeight * 0.5 - currentHeight * 0.5,
+          );
+
+          if (distanceY > 0 && newOffsetY > minTranslateY) {
+            newOffsetY = currentOffsetY + distanceY * 0.2;
+          }
+
+          if (distanceY < 0 && newOffsetY < maxTranslateY) {
+            newOffsetY = currentOffsetY + distanceY * 0.2;
+          }
+
+          imageData.top = newOffsetY;
+          changed = true;
+        }
+      } else {
+        if (isNumber(newOffsetX)) {
+          imageData.left = newOffsetX;
+          changed = true;
+        }
+
+        if (isNumber(newOffsetY)) {
+          imageData.top = newOffsetY;
+          changed = true;
+        }
       }
 
       if (changed) {
         this.renderImage();
       }
+    }
+
+    return this;
+  },
+
+  /**
+   * Check when end of move to return limit position.
+   * @returns {Viewer} this
+   */
+  checkMoveReset() {
+    const {
+      imageData,
+      containerData,
+    } = this;
+    let changed = false;
+
+    const canvasWidth = containerData.width;
+    const canvasHeight = containerData.height;
+
+    const currentOffsetX = imageData.left;
+    const currentOffsetY = imageData.top;
+
+    const currentWidth = imageData.width;
+    const currentHeight = imageData.height;
+
+    // Slow down proportionally to traveled distance
+    const minTranslateX = Math.max(0, canvasWidth * 0.5 - currentWidth * 0.5);
+    const maxTranslateX = Math.min(
+      canvasWidth - currentWidth,
+      canvasWidth * 0.5 - currentWidth * 0.5,
+    );
+    const minTranslateY = Math.max(0, canvasHeight * 0.5 - currentHeight * 0.5);
+    const maxTranslateY = Math.min(
+      canvasHeight - currentHeight,
+      canvasHeight * 0.5 - currentHeight * 0.5,
+    );
+
+    if (
+      currentOffsetX > minTranslateX
+      || currentOffsetX < maxTranslateX
+      || currentOffsetY > minTranslateY
+      || currentOffsetY < maxTranslateY
+    ) {
+      changed = true;
+      if (currentOffsetX > minTranslateX) imageData.left = minTranslateX;
+      if (currentOffsetX < maxTranslateX) imageData.left = maxTranslateX;
+      if (currentOffsetY > minTranslateY) imageData.top = minTranslateY;
+      if (currentOffsetY < maxTranslateY) imageData.top = maxTranslateY;
+    }
+
+    if (changed) {
+      this.renderImage();
     }
 
     return this;
@@ -401,7 +531,9 @@ export default {
    * @returns {Viewer} this
    */
   zoom(ratio, hasTooltip = false, _originalEvent = null) {
-    const { imageData } = this;
+    const {
+      imageData,
+    } = this;
 
     ratio = Number(ratio);
 
@@ -530,7 +662,9 @@ export default {
    * @returns {Viewer} this
    */
   rotateTo(degree) {
-    const { imageData } = this;
+    const {
+      imageData,
+    } = this;
 
     degree = Number(degree);
 
@@ -571,7 +705,9 @@ export default {
    * @returns {Viewer} this
    */
   scale(scaleX, scaleY = scaleX) {
-    const { imageData } = this;
+    const {
+      imageData,
+    } = this;
 
     scaleX = Number(scaleX);
     scaleY = Number(scaleY);
@@ -607,7 +743,10 @@ export default {
       return this;
     }
 
-    const { options, player } = this;
+    const {
+      options,
+      player,
+    } = this;
     const onLoad = this.loadImage.bind(this);
     const list = [];
     let total = 0;
@@ -668,7 +807,9 @@ export default {
       return this;
     }
 
-    const { player } = this;
+    const {
+      player,
+    } = this;
 
     this.played = false;
     clearTimeout(this.playing);
@@ -785,7 +926,11 @@ export default {
 
   // Show the current ratio of the image with percentage
   tooltip() {
-    const { options, tooltipBox, imageData } = this;
+    const {
+      options,
+      tooltipBox,
+      imageData,
+    } = this;
 
     if (!this.viewed || this.played || !options.tooltip) {
       return this;
@@ -860,7 +1005,11 @@ export default {
 
   // Update viewer when images changed
   update() {
-    const { element, options, isImg } = this;
+    const {
+      element,
+      options,
+      isImg,
+    } = this;
 
     // Destroy viewer if the target image was deleted
     if (isImg && !element.parentNode) {
@@ -938,7 +1087,10 @@ export default {
 
   // Destroy the viewer
   destroy() {
-    const { element, options } = this;
+    const {
+      element,
+      options,
+    } = this;
 
     if (!element[NAMESPACE]) {
       return this;
