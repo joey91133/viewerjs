@@ -5,7 +5,7 @@
  * Copyright 2015-present Chen Fengyuan
  * Released under the MIT license
  *
- * Date: 2018-12-07T09:51:34.906Z
+ * Date: 2018-12-07T10:40:04.052Z
  */
 
 .viewer-zoom-in::before,
@@ -27,9 +27,9 @@
   color: transparent;
   display: block;
   font-size: 0;
-  height: 20px;
+  height: 40px;
   line-height: 0;
-  width: 20px;
+  width: 40px;
 }
 
 .viewer-zoom-in::before {
@@ -38,67 +38,67 @@
 }
 
 .viewer-zoom-out::before {
-  background-position: -20px 0;
+  background-position: -40px 0;
   content: 'Zoom Out';
 }
 
 .viewer-one-to-one::before {
-  background-position: -40px 0;
+  background-position: -80px 0;
   content: 'One to One';
 }
 
 .viewer-reset::before {
-  background-position: -60px 0;
+  background-position: -120px 0;
   content: 'Reset';
 }
 
 .viewer-prev::before {
-  background-position: -80px 0;
+  background-position: -160px 0;
   content: 'Previous';
 }
 
 .viewer-play::before {
-  background-position: -100px 0;
+  background-position: -200px 0;
   content: 'Play';
 }
 
 .viewer-next::before {
-  background-position: -120px 0;
+  background-position: -240px 0;
   content: 'Next';
 }
 
 .viewer-rotate-left::before {
-  background-position: -140px 0;
+  background-position: -280px 0;
   content: 'Rotate Left';
 }
 
 .viewer-rotate-right::before {
-  background-position: -160px 0;
+  background-position: -320px 0;
   content: 'Rotate Right';
 }
 
 .viewer-flip-horizontal::before {
-  background-position: -180px 0;
+  background-position: -360px 0;
   content: 'Flip Horizontal';
 }
 
 .viewer-flip-vertical::before {
-  background-position: -200px 0;
+  background-position: -400px 0;
   content: 'Flip Vertical';
 }
 
 .viewer-fullscreen::before {
-  background-position: -220px 0;
+  background-position: -440px 0;
   content: 'Enter Full Screen';
 }
 
 .viewer-fullscreen-exit::before {
-  background-position: -240px 0;
+  background-position: -480px 0;
   content: 'Exit Full Screen';
 }
 
 .viewer-close::before {
-  background-position: -260px 0;
+  background-position: -520px 0;
   content: 'Close';
 }
 
@@ -188,15 +188,15 @@
   font-size: 0;
   height: 50px;
   line-height: 0;
-  opacity: .5;
+  opacity: 0.5;
   overflow: hidden;
-  -webkit-transition: opacity .15s;
-  transition: opacity .15s;
+  -webkit-transition: opacity 0.15s;
+  transition: opacity 0.15s;
   width: 30px;
 }
 
 .viewer-list > li:hover {
-  opacity: .75;
+  opacity: 0.75;
 }
 
 .viewer-list > li + li {
@@ -209,10 +209,10 @@
 
 .viewer-list > .viewer-loading::after {
   border-width: 2px;
-  height: 20px;
+  height: 40px;
   margin-left: -10px;
   margin-top: -10px;
-  width: 20px;
+  width: 40px;
 }
 
 .viewer-list > .viewer-active,
@@ -249,11 +249,11 @@
   border-radius: 50%;
   cursor: pointer;
   float: left;
-  height: 24px;
+  height: 48px;
   overflow: hidden;
-  -webkit-transition: background-color .15s;
-  transition: background-color .15s;
-  width: 24px;
+  -webkit-transition: background-color 0.15s;
+  transition: background-color 0.15s;
+  width: 48px;
 }
 
 .viewer-toolbar > ul > li:hover {
@@ -261,7 +261,7 @@
 }
 
 .viewer-toolbar > ul > li::before {
-  margin: 2px;
+  margin: 4px;
 }
 
 .viewer-toolbar > ul > li + li {
@@ -296,9 +296,9 @@
   color: #fff;
   display: none;
   font-size: 12px;
-  height: 20px;
+  height: 40px;
   left: 50%;
-  line-height: 20px;
+  line-height: 40px;
   margin-left: -25px;
   margin-top: -10px;
   position: absolute;
@@ -314,11 +314,11 @@
   line-height: 1;
   margin: 0 5% 5px;
   max-width: 90%;
-  opacity: .8;
+  opacity: 0.8;
   overflow: hidden;
   text-overflow: ellipsis;
-  -webkit-transition: opacity .15s;
-  transition: opacity .15s;
+  -webkit-transition: opacity 0.15s;
+  transition: opacity 0.15s;
   white-space: nowrap;
 }
 
@@ -330,14 +330,14 @@
   background-color: rgba(0, 0, 0, .5);
   border-radius: 50%;
   cursor: pointer;
-  height: 80px;
+  height: 100px;
   overflow: hidden;
   position: absolute;
   right: -40px;
   top: -40px;
-  -webkit-transition: background-color .15s;
-  transition: background-color .15s;
-  width: 80px;
+  -webkit-transition: background-color 0.15s;
+  transition: background-color 0.15s;
+  width: 100px;
 }
 
 .viewer-button:focus,
@@ -390,8 +390,8 @@
 }
 
 .viewer-transition {
-  -webkit-transition: all .3s;
-  transition: all .3s;
+  -webkit-transition: all 0.3s;
+  transition: all 0.3s;
 }
 
 @-webkit-keyframes viewer-spinner {
